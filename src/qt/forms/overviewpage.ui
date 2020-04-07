@@ -31,6 +31,34 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
+           <widget class="QLabel" name="label_6">
+            <property name="maximumSize">
+             <size>
+              <width>55</width>
+              <height>55</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+            <property name="pixmap">
+             <pixmap resource="../bitcoin.qrc">:/images/about</pixmap>
+            </property>
+            <property name="scaledContents">
+             <bool>true</bool>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
+            <property name="margin">
+             <number>5</number>
+            </property>
+            <property name="indent">
+             <number>5</number>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QLabel" name="label_5">
             <property name="font">
              <font>
@@ -72,31 +100,6 @@
              </size>
             </property>
            </spacer>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_6">
-            <property name="maximumSize">
-             <size>
-              <width>60</width>
-              <height>60</height>
-             </size>
-            </property>
-            <property name="text">
-             <string/>
-            </property>
-            <property name="pixmap">
-             <pixmap resource="../bitcoin.qrc">:/images/about</pixmap>
-            </property>
-            <property name="scaledContents">
-             <bool>true</bool>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignCenter</set>
-            </property>
-            <property name="margin">
-             <number>-2</number>
-            </property>
-           </widget>
           </item>
          </layout>
         </item>
@@ -288,22 +291,9 @@
                  </size>
                 </property>
                 <property name="styleSheet">
-                 <string notr="true">background-color: #015414;</string>
+                 <string notr="true">background-color: #bf160d;</string>
                 </property>
                 <layout class="QHBoxLayout" name="horizontalLayout_5">
-                 <item>
-                  <widget class="QLabel" name="label_7">
-                   <property name="maximumSize">
-                    <size>
-                     <width>16</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;img src=&quot;:/icons/links&quot;/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                  </widget>
-                 </item>
                  <item>
                   <widget class="QLabel" name="label_8">
                    <property name="font">
@@ -315,7 +305,7 @@
                     </font>
                    </property>
                    <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#eff0f1;&quot;&gt;Links&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:12pt; color:#eff0f1;&quot;&gt;Forms / Wallets / Explorers / Exchanges&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                   </widget>
                  </item>
@@ -342,8 +332,14 @@
                  </property>
                  <item>
                   <widget class="QLabel" name="label_9">
+                   <property name="maximumSize">
+                    <size>
+                     <width>125</width>
+                     <height>125</height>
+                    </size>
+                   </property>
                    <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://fourtwentyone.net/&quot;&gt;&lt;img src=&quot;:/icons/web&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://bitcointalk.org/index.php?topic=765196.0&quot;&gt;&lt;img src=&quot;:/images/res/images/btct.png&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
                    </property>
                    <property name="scaledContents">
                     <bool>false</bool>
@@ -354,21 +350,8 @@
                    <property name="margin">
                     <number>5</number>
                    </property>
-                   <property name="openExternalLinks">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="label9">
-                   <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://www.four20one.com/bitcointalk&quot;&gt;&lt;img src=&quot;:/icons/bitcointalk&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-                   </property>
-                   <property name="alignment">
-                    <set>Qt::AlignCenter</set>
-                   </property>
-                   <property name="margin">
-                    <number>5</number>
+                   <property name="indent">
+                    <number>-1</number>
                    </property>
                    <property name="openExternalLinks">
                     <bool>true</bool>
@@ -377,8 +360,17 @@
                  </item>
                  <item>
                   <widget class="QLabel" name="label10">
+                   <property name="maximumSize">
+                    <size>
+                     <width>150</width>
+                     <height>125</height>
+                    </size>
+                   </property>
                    <property name="text">
-                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://www.crypto-city.com/index.php/fourtwentyone/&quot;&gt;&lt;img src=&quot;:/icons/blog&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;a href=&quot;https://www.crypto-city.com/index.php/topcoin3/info&quot;&gt;&lt;img src=&quot;:/images/res/images/cc.png&quot;/&gt;&lt;/a&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+                   </property>
+                   <property name="scaledContents">
+                    <bool>false</bool>
                    </property>
                    <property name="alignment">
                     <set>Qt::AlignCenter</set>
