@@ -11,3 +11,5 @@ TopCoin3 - TOP
 Ports:
 connection:	22561
 RPC:			22562
+
+Discord  https://discord.gg/WFcFAnb
