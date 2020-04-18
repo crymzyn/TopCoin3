@@ -11,3 +11,9 @@ TopCoin3 - TOP
 Ports:
 connection:	22561
 RPC:			22562
+
+- Links 
+
+- Discord  https://discord.gg/WFcFAnb
+
+- bitcointalk link: https://bitcointalk.org/index.php?topic=765196.0
