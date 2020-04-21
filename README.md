@@ -17,3 +17,15 @@ RPC:			22562
 - Discord  https://discord.gg/WFcFAnb
 
 - bitcointalk link: https://bitcointalk.org/index.php?topic=765196.0
+
+- Ubuntu Build
+
+- GUI 
+- (from root of source folder) qmake -qt4 USE_UPNP=-
+- make ((-j# Number of threads) optional)
+
+
+- Daemon 
+- (from root of source folder/src)
+- make -f makefile.unix USE_UPNP=-
+
