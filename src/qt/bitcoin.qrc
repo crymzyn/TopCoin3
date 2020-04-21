@@ -46,8 +46,14 @@
         <file alias="about">res/images/about.png</file>
         <file alias="splash">res/images/splash.png</file>
         <file alias="backg">res/images/wallet.png</file>
-        <file>res/images/cc.png</file>
-        <file>res/images/btct.png</file>
+        <file>res/images/top3buttons/community.png</file>
+        <file>res/images/top3buttons/discord.png</file>
+        <file>res/images/top3buttons/explorer.png</file>
+        <file>res/images/top3buttons/information.png</file>
+        <file>res/images/top3buttons/listings.png</file>
+        <file>res/images/top3buttons/pools.png</file>
+        <file>res/images/top3buttons/source.png</file>
+        <file>res/images/top3buttons/wallets.png</file>
     </qresource>
     <qresource prefix="/movies">
         <file alias="update_spinner">res/movies/update_spinner.mng</file>

@@ -69,7 +69,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     rpcConsole(0)
 {
     resize(850, 550);
-    setWindowTitle(tr("TopCoin3") + " - " + tr("Wallet"));
+    setWindowTitle(tr("TopCoinV3") + " - " + tr("Wallet"));
+    qApp->setStyleSheet("QMainWindow { background-color: #ffffff }");
 #ifndef Q_OS_MAC
     qApp->setWindowIcon(QIcon(":icons/bitcoin"));
     setWindowIcon(QIcon(":icons/bitcoin"));
