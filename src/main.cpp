@@ -938,6 +938,30 @@ uint256 static GetOrphanRoot(const CBlock* pblock)
     return pblock->GetHash();
 }
 
+// Remove a random orphan block (which does not have any dependent orphans).
+void static PruneOrphanBlocks()
+{
+    if (mapOrphanBlocksByPrev.size() <= MAX_ORPHAN_BLOCKS)
+        return;
+
+    // Pick a random orphan block.
+    int pos = rand() % mapOrphanBlocksByPrev.size();
+    map<uint256, CBlock*>::iterator it = mapOrphanBlocksByPrev.begin();
+    while (pos--) it++;
+
+    // As long as this block has other orphans depending on it, move to one of those successors.
+    do {
+        map<uint256, CBlock*>::iterator it2 = mapOrphanBlocksByPrev.find(it->second->GetHash());
+        if (it2 == mapOrphanBlocksByPrev.end())
+            break;
+        it = it2;
+    } while(1);
+
+    uint256 hash = it->second->GetHash();
+    delete it->second;
+    mapOrphanBlocksByPrev.erase(it);
+    mapOrphanBlocks.erase(hash);
+}
 
 // ppcoin: find block wanted by given orphan block
 uint256 WantedByOrphan(const CBlock* pblockOrphan)
@@ -2297,7 +2321,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
     // If don't already have its previous block, shunt it off to holding area until we get it
     if (!mapBlockIndex.count(pblock->hashPrevBlock))
     {
-        printf("ProcessBlock: ORPHAN BLOCK, prev=%s\n", pblock->hashPrevBlock.ToString().substr(0,20).c_str());
+        printf("ProcessBlock: ORPHAN BLOCK %lu, prev=%s\n", (unsigned long)mapOrphanBlocks.size(), pblock->hashPrevBlock.ToString().substr(0,20).c_str());
         CBlock* pblock2 = new CBlock(*pblock);
         // ppcoin: check proof-of-stake
         if (pblock2->IsProofOfStake())
@@ -2315,6 +2339,7 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         // Ask this guy to fill in what we're missing
         if (pfrom)
         {
+            PruneOrphanBlocks();
             pfrom->PushGetBlocks(pindexBest, GetOrphanRoot(pblock2));
             // ppcoin: getblocks may not obtain the ancestor block rejected
             // earlier by duplicate-stake check so we ask for it again directly
