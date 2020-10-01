@@ -97,7 +97,11 @@ public:
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
 
-    // minimum value allowed for nStakeSplitThreshold (customizable with -minstakesplit flag)
+
+    // topcoin: stake split threshold
+    int64_t nStakeSplitThreshold;
+
+    // topcoin: minimum value allowed for nStakeSplitThreshold (customizable with -minstakesplit flag)
     static int64_t minStakeSplitThreshold;
 
     CWallet()
