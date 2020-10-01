@@ -2,27 +2,38 @@
 # Distributed under the MIT/X11 software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-USE_UPNP:=1
+USE_UPNP:=-
 USE_IPV6:=1
 
-INCLUDEPATHS= 
- 
-LIBPATHS= 
+BOOST_SUFFIX?=-mgw49-mt-s-1_54
 
+INCLUDEPATHS= \
+ -I"$(CURDIR)" \
+ -I"/c/deps/boost_1_54_0" \
+ -I"/c/deps" \
+ -I"/c/deps/db-4.8.30.NC/build_unix" \
+ -I"/c/deps/openssl-1.0.2/include"
+ 
+LIBPATHS= \
+ -L"/c/deps/boost_1_54_0/stage/lib" \
+ -L"/c/deps/miniupnpc" \
+ -L"/c/deps/db-4.8.30.NC/build_unix" \
+ -L"/c/deps/openssl-1.0.2"
 
 LIBS= \
- -l boost_system-mgw48-mt-s-1_53 \
- -l boost_filesystem-mgw48-mt-s-1_53 \
- -l boost_program_options-mgw48-mt-s-1_53 \
- -l boost_thread-mgw48-mt-s-1_53 \
- -l db_cxx \
- -l ssl \
- -l crypto
+  -l boost_system$(BOOST_SUFFIX) \
+  -l boost_filesystem$(BOOST_SUFFIX) \
+  -l boost_program_options$(BOOST_SUFFIX) \
+  -l boost_thread$(BOOST_SUFFIX) \
+  -l boost_chrono$(BOOST_SUFFIX) \
+  -l db_cxx \
+  -l ssl \
+  -l crypto
 
 DEFS=-D_MT -DWIN32 -DWIN32_LEAN_AND_MEAN -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -D__NO_SYSTEM_INCLUDES
 DEBUGFLAGS=-g
 CFLAGS=${ADDITIONALCCFLAGS} -mthreads -O2 -msse2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
-LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat
+LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static
 
 TESTDEFS = -DTEST_DATA_DIR=$(abspath test/data)
 

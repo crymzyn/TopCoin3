@@ -18,6 +18,9 @@
 #include "util.h"
 #include "walletdb.h"
 
+//! -minstakesplit default
+static const int64_t DEFAULT_MIN_STAKE_SPLIT_THRESHOLD = 100 * COIN;
+
 extern bool fWalletUnlockMintOnly;
 class CAccountingEntry;
 class CWalletTx;
@@ -92,6 +95,9 @@ public:
     typedef std::map<unsigned int, CMasterKey> MasterKeyMap;
     MasterKeyMap mapMasterKeys;
     unsigned int nMasterKeyMaxID;
+
+    // minimum value allowed for nStakeSplitThreshold (customizable with -minstakesplit flag)
+    static int64_t minStakeSplitThreshold;
 
     CWallet()
     {

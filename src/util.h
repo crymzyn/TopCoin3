@@ -29,6 +29,10 @@ typedef int pid_t; /* define for Windows compatibility */
 
 #include "netbase.h" // for AddTimeData
 
+static const int32_t nOneHour = 60 * 60;    
+static const int32_t nOneDay = 24 * 60 * 60;    
+static const int32_t nOneMonth = 7 * 24 * 60 * 60;
+
 typedef long long  int64;
 typedef unsigned long long  uint64;
 

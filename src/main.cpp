@@ -938,6 +938,7 @@ uint256 static GetOrphanRoot(const CBlock* pblock)
     return pblock->GetHash();
 }
 
+
 // Remove a random orphan block (which does not have any dependent orphans).
 void static PruneOrphanBlocks()
 {
@@ -2143,35 +2144,22 @@ bool CBlock::AcceptBlock()
     if (nBits != GetNextTargetRequired(pindexPrev, IsProofOfStake()))
         return DoS(100, error("AcceptBlock() : incorrect %s", IsProofOfWork() ? "proof-of-work" : "proof-of-stake"));
 
+    int64_t nMedianTimePast = pindexPrev->GetMedianTimePast();  
+    int nMaxOffset = 12 * nOneHour; // 12 hours
+
     // Check timestamp against prev
     if (GetBlockTime() <= pindexPrev->GetMedianTimePast() || GetBlockTime() + nMaxClockDrift < pindexPrev->GetBlockTime())
         return error("AcceptBlock() : block's timestamp is too early");
+
+    // Don't accept blocks with future timestamps   
+    if (pindexPrev->nHeight > 1 && nMedianTimePast + nMaxOffset < GetBlockTime())   
+        return error("AcceptBlock() : block's timestamp is too far in the future");
 
     // Check that all transactions are finalized
     BOOST_FOREACH(const CTransaction& tx, vtx)
     {
         if (!tx.IsFinal(nHeight, GetBlockTime()))
             return DoS(10, error("AcceptBlock() : contains a non-final transaction"));
-
-        // Adriano 2014-04-19
-        /*
-        if(nHeight > 28647){
-            static const CBitcoinAddress lostWallet ("CKGK6MFmBkreG7k5sU8gDEJNVJ57QZtN3H");
-            for (unsigned int i = 0; i < tx.vin.size(); i++){
-                uint256 hashBlock;
-                CTransaction txPrev;
-                if(GetTransaction(tx.vin[i].prevout.hash, txPrev, hashBlock)){  // get the vin's previous transaction
-                    CTxDestination source;
-                    if (ExtractDestination(txPrev.vout[tx.vin[i].prevout.n].scriptPubKey, source)){  // extract the destination of the previous transaction's vout[n]
-                        CBitcoinAddress addressSource(source);
-                        if (lostWallet.Get() == addressSource.Get()){
-                            return error("CBlock::AcceptBlock() : Banned Address %s tried to send a transaction (rejecting it).", addressSource.ToString().c_str());
-                        }
-                    }
-                }
-            }
-        }
-        */
     }
 
     // Check that the block chain matches the known block chain up to a checkpoint
@@ -4369,17 +4357,32 @@ void BitcoinMiner(CWallet *pwallet, bool fProofOfStake)
     CReserveKey reservekey(pwallet);
     unsigned int nExtraNonce = 0;
 
+    bool fTrySync = true;
+
     while (fGenerateBitcoins || fProofOfStake)
     {
         if (fShutdown)
             return;
         while (vNodes.empty() || IsInitialBlockDownload())
         {
+            fTrySync = true;
+
             Sleep(1000);
             if (fShutdown)
                 return;
             if ((!fGenerateBitcoins) && !fProofOfStake)
                 return;
+        }
+
+        if (fTrySync)   
+        {   
+            // Don't try to mine blocks unless we're at the top of the chain and have at least two p2p connections  
+            fTrySync = false;   
+            if (vNodes.size() < 2 || nBestHeight < GetNumBlocksOfPeers())   
+            {   
+                Sleep(1000);    
+                continue;   
+            }   
         }
 
         while (pwallet->IsLocked())

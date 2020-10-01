@@ -1075,6 +1075,9 @@ static void ApproximateBestSubset(vector<pair<int64, pair<const CWalletTx*,unsig
     }
 }
 
+// topcoin: minimum accepted value for stake split threshold
+int64_t CWallet::minStakeSplitThreshold = DEFAULT_MIN_STAKE_SPLIT_THRESHOLD;
+
 // ppcoin: total coins staked (non-spendable until maturity)
 int64 CWallet::GetStake() const
 {
@@ -1375,9 +1378,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     // Should not be adjusted if you don't understand the consequences
     static unsigned int nStakeSplitAge = (60 * 60 * 24 * 30);
 	const CBlockIndex* pIndex0 = GetLastBlockIndex(pindexBest, false);
-    int64 nCombineThreshold = 0;
-	if(pIndex0->pprev)
-		nCombineThreshold = GetProofOfWorkReward(pIndex0->nHeight, MIN_TX_FEE, pIndex0->pprev->GetBlockHash()) / 3;
+
+    int64 nPoWReward = GetProofOfWorkReward(pIndex0->nHeight, MIN_TX_FEE, pIndex0->pprev->GetBlockHash()) / 3;  
+    int64 nCombineThreshold = nPoWReward / 3;
 
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
@@ -1395,6 +1398,15 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         return error("CreateCoinStake : invalid reserve balance amount");
     if (nBalance <= nReserveBalance)
         return false;
+
+    // topcoin: pulling in value from start up flag
+    if (mapArgs.count("-minstakesplit")) {
+        int n = 0;
+        if (ParseMoney(mapArgs["-minstakesplit"], n) && n > 0)
+            CWallet::minStakeSplitThreshold = n;
+        else
+            return error("CreateCoinStake : invalid minstakesplit amount");
+    }
 
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     vector<const CWalletTx*> vwtxPrev;
@@ -1485,8 +1497,16 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
                 vwtxPrev.push_back(pcoin.first);
                 txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
-                if (block.GetBlockTime() + nStakeSplitAge > txNew.nTime)
-                    txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake
+
+                // topcoin: check minstake setting first
+                if (CWallet::minStakeSplitThreshold > 0) 
+                {
+                    if (block.GetBlockTime() + nStakeSplitAge > txNew.nTime && nCredit > nPoWReward && nCredit > CWallet::minStakeSplitThreshold)
+                    {
+                        printf("CreateCoinStake : splitting stake\n");
+                        txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake if (age < 30 && value > POW)
+                    }
+                }
 
                 if (fDebug && GetBoolArg("-printcoinstake"))
                     printf("CreateCoinStake : added kernel type=%d\n", whichType);
