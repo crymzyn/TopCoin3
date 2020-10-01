@@ -18,8 +18,9 @@
 #include "util.h"
 #include "walletdb.h"
 
+// topcoin: set minstakesplit default
 //! -minstakesplit default
-static const int64_t DEFAULT_MIN_STAKE_SPLIT_THRESHOLD = 100 * COIN;
+static const int64_t DEFAULT_MIN_STAKE_SPLIT_THRESHOLD = 5000;
 
 extern bool fWalletUnlockMintOnly;
 class CAccountingEntry;

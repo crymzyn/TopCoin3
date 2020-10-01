@@ -248,7 +248,7 @@ std::string HelpMessage()
         "  -bantime=<n>           " + _("Number of seconds to keep misbehaving peers from reconnecting (default: 86400)") + "\n" +
         "  -maxreceivebuffer=<n>  " + _("Maximum per-connection receive buffer, <n>*1000 bytes (default: 5000)") + "\n" +
         "  -maxsendbuffer=<n>     " + _("Maximum per-connection send buffer, <n>*1000 bytes (default: 1000)") + "\n" +
-        "  -minstakesplit=<amt>   " + _("Minimum positive amount allowed by GUI and RPC for the stake split threshold (default: 100)") + "\n" +
+        "  -minstakesplit=<amt>   " + _("Minimum positive amount allowed by GUI and RPC for the stake split threshold (default: 5000)") + "\n" +
 #ifdef USE_UPNP
 #if USE_UPNP
         "  -upnp                  " + _("Use UPnP to map the listening port (default: 1 when listening)") + "\n" +
@@ -742,6 +742,13 @@ bool AppInit2()
         }
         else
             strErrors << _("Error loading wallet.dat") << "\n";
+    }
+
+    // check minimum stake split threshold
+    if (pwalletMain->nStakeSplitThreshold && pwalletMain->nStakeSplitThreshold < CWallet::minStakeSplitThreshold) {
+        printf("WARNING: stake split threshold value %s too low. Restoring to minimum value %s.\n",
+                FormatMoney(pwalletMain->nStakeSplitThreshold), FormatMoney(CWallet::minStakeSplitThreshold));
+        pwalletMain->nStakeSplitThreshold = CWallet::minStakeSplitThreshold;
     }
 
     if (GetBoolArg("-upgradewallet", fFirstRun))
