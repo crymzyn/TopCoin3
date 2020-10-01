@@ -747,7 +747,7 @@ bool AppInit2()
     // check minimum stake split threshold
     if (pwalletMain->nStakeSplitThreshold && pwalletMain->nStakeSplitThreshold < CWallet::minStakeSplitThreshold) {
         printf("WARNING: stake split threshold value %s too low. Restoring to minimum value %s.\n",
-                FormatMoney(pwalletMain->nStakeSplitThreshold), FormatMoney(CWallet::minStakeSplitThreshold));
+            pwalletMain->nStakeSplitThreshold, CWallet::minStakeSplitThreshold);
         pwalletMain->nStakeSplitThreshold = CWallet::minStakeSplitThreshold;
     }
 

@@ -1401,7 +1401,7 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 
     // topcoin: pulling in value from start up flag
     if (mapArgs.count("-minstakesplit")) {
-        int n = 0;
+        int64_t n = 0;
         if (ParseMoney(mapArgs["-minstakesplit"], n) && n > 0)
             CWallet::minStakeSplitThreshold = n;
         else
