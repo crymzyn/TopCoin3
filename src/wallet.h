@@ -20,7 +20,7 @@
 
 // topcoin: set minstakesplit default
 //! -minstakesplit default
-static const int64_t DEFAULT_MIN_STAKE_SPLIT_THRESHOLD = 5000;
+static const int64_t DEFAULT_MIN_STAKE_SPLIT_THRESHOLD = 1000 * COIN;
 
 extern bool fWalletUnlockMintOnly;
 class CAccountingEntry;
@@ -102,7 +102,7 @@ public:
     int64_t nStakeSplitThreshold;
 
     // topcoin: minimum value allowed for nStakeSplitThreshold (customizable with -minstakesplit flag)
-    static int64_t minStakeSplitThreshold;
+    static int64_t minStakeSplitThreshold; 
 
     CWallet()
     {

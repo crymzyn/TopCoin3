@@ -17,6 +17,8 @@ using namespace std;
 extern int nStakeMaxAge;
 
 
+int64_t CWallet::minStakeSplitThreshold = DEFAULT_MIN_STAKE_SPLIT_THRESHOLD;
+
 //////////////////////////////////////////////////////////////////////////////
 //
 // mapWallet
@@ -1075,9 +1077,6 @@ static void ApproximateBestSubset(vector<pair<int64, pair<const CWalletTx*,unsig
     }
 }
 
-// topcoin: minimum accepted value for stake split threshold
-int64_t CWallet::minStakeSplitThreshold = DEFAULT_MIN_STAKE_SPLIT_THRESHOLD;
-
 // ppcoin: total coins staked (non-spendable until maturity)
 int64 CWallet::GetStake() const
 {
@@ -1379,8 +1378,11 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
     static unsigned int nStakeSplitAge = (60 * 60 * 24 * 30);
 	const CBlockIndex* pIndex0 = GetLastBlockIndex(pindexBest, false);
 
-    int64 nPoWReward = GetProofOfWorkReward(pIndex0->nHeight, MIN_TX_FEE, pIndex0->pprev->GetBlockHash()) / 3;  
-    int64 nCombineThreshold = nPoWReward / 3;
+    int64 nPoWReward = GetProofOfWorkReward(pIndex0->nHeight, MIN_TX_FEE, pIndex0->pprev->GetBlockHash());  
+    printf("CreateCoinStake : pIndex0->nHeight is %s\n", pIndex0->nHeight);
+    printf("CreateCoinStake : pIndex0->pprev->GetBlockHash() is %s\n", pIndex0->pprev->GetBlockHash());
+    printf("CreateCoinStake : nPoWReward is %lu\n", nPoWReward);
+    int64 nCombineThreshold = nPoWReward / 3; // topcoin: not sure if we need this, but leaving in place in case we implement combine
 
     CBigNum bnTargetPerCoinDay;
     bnTargetPerCoinDay.SetCompact(nBits);
@@ -1398,15 +1400,6 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
         return error("CreateCoinStake : invalid reserve balance amount");
     if (nBalance <= nReserveBalance)
         return false;
-
-    // topcoin: pulling in value from start up flag
-    if (mapArgs.count("-minstakesplit")) {
-        int64_t n = 0;
-        if (ParseMoney(mapArgs["-minstakesplit"], n) && n > 0)
-            CWallet::minStakeSplitThreshold = n;
-        else
-            return error("CreateCoinStake : invalid minstakesplit amount");
-    }
 
     set<pair<const CWalletTx*,unsigned int> > setCoins;
     vector<const CWalletTx*> vwtxPrev;
@@ -1499,9 +1492,9 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
                 txNew.vout.push_back(CTxOut(0, scriptPubKeyOut));
 
                 // topcoin: check minstake setting first
-                if (CWallet::minStakeSplitThreshold > 0) 
+                if (CWallet::nStakeSplitThreshold > 0) 
                 {
-                    if (block.GetBlockTime() + nStakeSplitAge > txNew.nTime && nCredit > nPoWReward && nCredit > CWallet::minStakeSplitThreshold)
+                    if (block.GetBlockTime() + nStakeSplitAge > txNew.nTime && nCredit > nPoWReward && nCredit > CWallet::nStakeSplitThreshold)
                     {
                         printf("CreateCoinStake : splitting stake\n");
                         txNew.vout.push_back(CTxOut(0, scriptPubKeyOut)); //split stake if (age < 30 && value > POW)
