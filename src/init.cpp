@@ -752,7 +752,7 @@ bool AppInit2()
         printf("minstakesplit value : %s\n",mapArgs["-minstakesplit"].c_str());
         int64_t n = 0;
 
-        printf("CreateCoinStake : ParseMoney(mapArgs['-minstakesplit']) is %lu\n", ParseMoney(mapArgs["-minstakesplit"], n));
+        // printf("CreateCoinStake : ParseMoney(mapArgs['-minstakesplit']) is %lu\n", ParseMoney(mapArgs["-minstakesplit"], n));
         printf("CreateCoinStake : n from minstakesplit check is %lu\n", n);
         if (ParseMoney(mapArgs["-minstakesplit"], n))
             pwalletMain->nStakeSplitThreshold = n;
