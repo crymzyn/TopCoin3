@@ -763,7 +763,7 @@ bool AppInit2()
 
     // check minimum stake split threshold
     if (pwalletMain->nStakeSplitThreshold && pwalletMain->nStakeSplitThreshold < pwalletMain->minStakeSplitThreshold && pwalletMain->nStakeSplitThreshold > 0) {
-        printf("WARNING: stake split threshold value %s too low. Restoring to minimum value %s.\n",
+        printf("WARNING: stake split threshold value %lu too low. Restoring to minimum value %lu.\n",
             pwalletMain->nStakeSplitThreshold, pwalletMain->minStakeSplitThreshold);
         pwalletMain->nStakeSplitThreshold = pwalletMain->minStakeSplitThreshold;
     }
