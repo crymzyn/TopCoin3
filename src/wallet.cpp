@@ -1379,8 +1379,8 @@ bool CWallet::CreateCoinStake(const CKeyStore& keystore, unsigned int nBits, int
 	const CBlockIndex* pIndex0 = GetLastBlockIndex(pindexBest, false);
 
     int64 nPoWReward = GetProofOfWorkReward(pIndex0->nHeight, MIN_TX_FEE, pIndex0->pprev->GetBlockHash());  
-    printf("CreateCoinStake : pIndex0->nHeight is %s\n", pIndex0->nHeight);
-    printf("CreateCoinStake : pIndex0->pprev->GetBlockHash() is %s\n", pIndex0->pprev->GetBlockHash());
+    printf("CreateCoinStake : pIndex0->nHeight is %d\n", pIndex0->nHeight);
+    printf("CreateCoinStake : pIndex0->pprev->GetBlockHash() is %lu\n", pIndex0->pprev->GetBlockHash());
     printf("CreateCoinStake : nPoWReward is %lu\n", nPoWReward);
     int64 nCombineThreshold = nPoWReward / 3; // topcoin: not sure if we need this, but leaving in place in case we implement combine
 
