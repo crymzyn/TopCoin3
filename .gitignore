@@ -1,3 +1,11 @@
 src/obj/
 build/
 release/
+src/topcoin3d.exe
+src/qt/locale/bitcoin_en.qm
+src/qt/locale/bitcoin_ru.qm
+Makefile
+Makefile.Debug
+Makefile.Release
+object_script.topcoin3-qt.Debug
+object_script.topcoin3-qt.Release
