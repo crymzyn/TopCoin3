@@ -22,7 +22,9 @@
 //! -minstakesplit default
 static const int64_t DEFAULT_MIN_STAKE_SPLIT_THRESHOLD = 1000 * COIN;
 
+// topcoin
 extern bool fWalletUnlockMintOnly;
+
 class CAccountingEntry;
 class CWalletTx;
 class CReserveKey;

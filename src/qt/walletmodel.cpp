@@ -9,6 +9,9 @@
 #include "walletdb.h" // for BackupWallet
 #include "base58.h"
 
+// topcoin: for AskPassphraseDialog
+#include "qt/askpassphrasedialog.h"
+
 #include <QSet>
 #include <QTimer>
 
@@ -303,6 +306,11 @@ bool WalletModel::changePassphrase(const SecureString &oldPass, const SecureStri
         retval = wallet->ChangeWalletPassphrase(oldPass, newPass);
     }
     return retval;
+}
+
+void WalletModel::decryptForMinting(bool status)
+{
+    return decryptForMinting(status);
 }
 
 bool WalletModel::backupWallet(const QString &filename)

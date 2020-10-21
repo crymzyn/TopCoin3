@@ -92,6 +92,10 @@ public:
     // Passphrase only needed when unlocking
     bool setWalletLocked(bool locked, const SecureString &passPhrase=SecureString());
     bool changePassphrase(const SecureString &oldPass, const SecureString &newPass);
+    // Decrypt wallet for minting only
+    void decryptForMinting(bool status);
+
+
     // Wallet backup
     bool backupWallet(const QString &filename);
 
