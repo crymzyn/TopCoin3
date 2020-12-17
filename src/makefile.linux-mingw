@@ -6,6 +6,7 @@ DEPSDIR:=/usr/i586-mingw32msvc
 
 USE_UPNP:=0
 USE_IPV6:=1
+USE_LEVELDB:=1
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
@@ -91,6 +92,21 @@ OBJS= \
 
 all: topcoin3d.exe
 
+#
+# LevelDB support
+#
+ifeq (${USE_LEVELDB}, 1)
+LIBS += $(CURDIR)/leveldb/libleveldb.a $(CURDIR)/leveldb/libmemenv.a
+DEFS += -I"$(CURDIR)/leveldb/include" -DUSE_LEVELDB
+DEFS += -I"$(CURDIR)/leveldb/helpers"
+OBJS += obj/txdb-leveldb.o
+leveldb/libleveldb.a:
+    @echo "Building LevelDB ..." && cd leveldb && CC=i586-mingw32msvc-gcc CXX=i586-mingw32msvc-g++ TARGET_OS=OS_WINDOWS_CROSSCOMPILE CXXFLAGS="-I$(INCLUDEPATHS)" LDFLAGS="-L$(LIBPATHS)" $(MAKE) libleveldb.a libmemenv.a && i586-mingw32msvc-ranlib libleveldb.a && i586-mingw32msvc-ranlib libmemenv.a && cd ..
+obj/txdb-leveldb.o: leveldb/libleveldb.a
+else
+OBJS += obj/txdb-bdb.o
+endif
+
 obj/build.h: FORCE
 	/bin/sh ../share/genbuild.sh obj/build.h
 version.cpp: obj/build.h
@@ -100,7 +116,7 @@ obj/%.o: %.cpp $(HEADERS)
 	i586-mingw32msvc-g++ -c $(CFLAGS) -o $@ $<
 
 topcoin3d.exe: $(OBJS:obj/%=obj/%)
-	i586-mingw32msvc-g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS)
+	i586-mingw32msvc-g++ $(CFLAGS) $(LDFLAGS) -o $@ $(LIBPATHS) $^ $(LIBS) -lshlwapi
 
 TESTOBJS := $(patsubst test/%.cpp,obj-test/%.o,$(wildcard test/*.cpp))
 
@@ -122,5 +138,6 @@ clean:
 	-rm -f obj-test/*.o
 	-rm -f test_topcoin3.exe
 	-rm -f obj/build.h
+    cd leveldb && TARGET_OS=OS_WINDOWS_CROSSCOMPILE $(MAKE) clean && cd ..
 
 FORCE:

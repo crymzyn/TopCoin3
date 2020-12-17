@@ -462,3 +462,8 @@ void WalletModel::UnlockContext::CopyFrom(const UnlockContext& rhs)
  {
      return;
  }
+
+ void WalletModel::clearOrphans()
+ {
+     wallet->ClearOrphans();
+ }
