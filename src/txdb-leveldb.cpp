@@ -27,14 +27,40 @@ leveldb::DB *txdb; // global pointer for LevelDB object instance
 
 static leveldb::Options GetOptions() {
     leveldb::Options options;
-    int nCacheSizeMB = GetArg("-dbcache", 25);
+    int nCacheSizeMB = GetArgInt("-dbcache", 25);
     options.block_cache = leveldb::NewLRUCache(nCacheSizeMB * 1048576);
-    // options.write_buffer_size = nCacheSize / 4; // up to two write buffers may be held in memory simultaneously
-    // topcoin: check why we do not have nCacheSize
+    options.write_buffer_size = nCacheSizeMB * 1048576 / 2; // up to two write buffers may be held in memory simultaneously
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
     options.compression = leveldb::kNoCompression;
     options.max_open_files = 64;
     return options;
+}
+
+void init_blockindex(leveldb::Options& options, bool fRemoveOld = false) {	
+    // First time init.	
+    filesystem::path directory = GetDataDir() / "txleveldb";
+
+    if (fRemoveOld) {	
+		filesystem::path directory = GetDataDir() / "txleveldb";	
+		filesystem::remove_all(directory); // remove directory	
+		unsigned int nFile = 1;	
+		while (true)	
+		{	
+		    filesystem::path strBlockFile = GetDataDir() / "txleveldb" / strprintf("blk%05u.dat", nFile);	
+		    // Break if no such file	
+		    if( !filesystem::exists( strBlockFile ) )	
+		        break;	
+		    filesystem::remove(strBlockFile);	
+		    nFile++;	
+		}	
+    }	
+
+    filesystem::create_directories(directory);	
+    printf("Opening LevelDB in %s\n", directory.string().c_str());	
+    leveldb::Status status = leveldb::DB::Open(options, directory.string(), &txdb);	
+    if (!status.ok()) {	
+        throw runtime_error(strprintf("init_blockindex(): error opening database environment %s", status.ToString().c_str()));	
+    }	
 }
 
 
@@ -51,27 +77,38 @@ CTxDB::CTxDB(const char* pszMode)
         return;
     }
 
-    // First time init.
-    filesystem::path directory = GetDataDir() / "txleveldb";
     bool fCreate = strchr(pszMode, 'c');
 
     options = GetOptions();
     options.create_if_missing = fCreate;
     options.filter_policy = leveldb::NewBloomFilterPolicy(10);
-    filesystem::create_directory(directory);
-    printf("Opening LevelDB in %s\n", directory.string().c_str());
-    leveldb::Status status = leveldb::DB::Open(options, directory.string(), &txdb);
-    if (!status.ok()) {
-        throw runtime_error(strprintf("CDB(): error opening database environment %s", status.ToString().c_str()));
-    }
+    
+    init_blockindex(options); // Init directory
     pdb = txdb;
 
     if (Exists(string("version")))
     {
         ReadVersion(nVersion);
         printf("Transaction index version is %d\n", nVersion);
+
+        // topcoin: turning this off for now...
+        //if (nVersion < DATABASE_VERSION)	
+        //{	
+        //    printf("Required index version is %d, removing old database\n", DATABASE_VERSION);	
+        //    // Leveldb instance destruction	
+        //    delete txdb;	
+        //    txdb = pdb = NULL;	
+        //    delete activeBatch;	
+        //    activeBatch = NULL;	
+        //    init_blockindex(options, true); // Remove directory and create new database	
+        //    pdb = txdb;	
+        //    bool fTmp = fReadOnly;	
+        //    fReadOnly = false;	
+        //    WriteVersion(DATABASE_VERSION); // Save transaction index version	
+        //    fReadOnly = fTmp;	
+        //}
     }
-    else if(fCreate)
+    else if (fCreate)
     {
         bool fTmp = fReadOnly;
         fReadOnly = false;
@@ -293,6 +330,7 @@ bool CTxDB::LoadBlockIndex()
         // from BDB.
         return true;
     }
+
     // The block index is an in-memory structure that maps hashes to on-disk
     // locations where the contents of the block can be found. Here, we scan it
     // out of the DB and into mapBlockIndex.
@@ -317,8 +355,10 @@ bool CTxDB::LoadBlockIndex()
         CDiskBlockIndex diskindex;
         ssValue >> diskindex;
 
+        uint256 blockHash = diskindex.GetBlockHash();
+
         // Construct block index object
-        CBlockIndex* pindexNew    = InsertBlockIndex(diskindex.GetBlockHash());
+        CBlockIndex* pindexNew    = InsertBlockIndex(blockHash);
         pindexNew->pprev          = InsertBlockIndex(diskindex.hashPrev);
         pindexNew->pnext          = InsertBlockIndex(diskindex.hashNext);
         pindexNew->nFile          = diskindex.nFile;
@@ -338,7 +378,7 @@ bool CTxDB::LoadBlockIndex()
         pindexNew->nNonce         = diskindex.nNonce;
 
         // Watch for genesis block
-        if (pindexGenesisBlock == NULL && diskindex.GetBlockHash() == hashGenesisBlock)
+        if (pindexGenesisBlock == NULL && blockHash == (!fTestNet ? hashGenesisBlock : hashGenesisBlockTestNet))
             pindexGenesisBlock = pindexNew;
 
         if (!pindexNew->CheckIndex()) {
@@ -357,7 +397,7 @@ bool CTxDB::LoadBlockIndex()
     if (fRequestShutdown)
         return true;
 
-    // Calculate nChainTrust
+    // Calculate bnChainTrust
     vector<pair<int, CBlockIndex*> > vSortedByHeight;
     vSortedByHeight.reserve(mapBlockIndex.size());
     BOOST_FOREACH(const PAIRTYPE(uint256, CBlockIndex*)& item, mapBlockIndex)
@@ -370,10 +410,10 @@ bool CTxDB::LoadBlockIndex()
     {
         CBlockIndex* pindex = item.second;
         pindex->bnChainTrust = (pindex->pprev ? pindex->pprev->bnChainTrust : 0) + pindex->GetBlockTrust();
-        // NovaCoin: calculate stake modifier checksum
+        // Calculate stake modifier checksum
         pindex->nStakeModifierChecksum = GetStakeModifierChecksum(pindex);
-        if (!CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum))
-            return error("CTxDB::LoadBlockIndex() : Failed stake modifier checkpoint height=%d, modifier=0x%016"PRI64x, pindex->nHeight, pindex->nStakeModifier);
+        if (!fTestNet && !CheckStakeModifierCheckpoints(pindex->nHeight, pindex->nStakeModifierChecksum))
+            return error("CTxDB::LoadBlockIndex() : Failed stake modifier checkpoint height=%d, modifier=0x%016" PRI64x, pindex->nHeight, pindex->nStakeModifier);
     }
 
     // Load hashBestChain pointer to end of best chain
@@ -390,10 +430,10 @@ bool CTxDB::LoadBlockIndex()
     bnBestChainTrust = pindexBest->bnChainTrust;
 
     printf("LoadBlockIndex(): hashBestChain=%s  height=%d  trust=%s  date=%s\n",
-      hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, CBigNum(bnBestChainTrust).ToString().c_str(),
+      hashBestChain.ToString().substr(0,20).c_str(), nBestHeight, bnBestChainTrust.ToString().c_str(),
       DateTimeStrFormat("%x %H:%M:%S", pindexBest->GetBlockTime()).c_str());
 
-    // topcoin: load hashSyncCheckpoint
+    // Load hashSyncCheckpoint
     if (!ReadSyncCheckpoint(Checkpoints::hashSyncCheckpoint))
         return error("CTxDB::LoadBlockIndex() : hashSyncCheckpoint not loaded");
     printf("LoadBlockIndex(): synchronized checkpoint %s\n", Checkpoints::hashSyncCheckpoint.ToString().c_str());
@@ -402,8 +442,8 @@ bool CTxDB::LoadBlockIndex()
     ReadBestInvalidTrust(bnBestInvalidTrust);
 
     // Verify blocks in the best chain
-    int nCheckLevel = GetArg("-checklevel", 1);
-    int nCheckDepth = GetArg( "-checkblocks", 2500);
+    int nCheckLevel = GetArgInt("-checklevel", 1);
+    int nCheckDepth = GetArgInt( "-checkblocks", 500);
     if (nCheckDepth == 0)
         nCheckDepth = 1000000000; // suffices until the year 19000
     if (nCheckDepth > nBestHeight)
@@ -419,6 +459,7 @@ bool CTxDB::LoadBlockIndex()
         if (!block.ReadFromDisk(pindex))
             return error("LoadBlockIndex() : block.ReadFromDisk failed");
         // check level 1: verify block validity
+        // check level 7: verify block signature too
         if (nCheckLevel>0 && !block.CheckBlock())
         {
             printf("LoadBlockIndex() : *** found bad block at %d, hash=%s\n", pindex->nHeight, pindex->GetBlockHash().ToString().c_str());

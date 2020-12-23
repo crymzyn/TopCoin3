@@ -127,7 +127,7 @@ bool Wait(int nSeconds)
     {
         if (fShutdown)
             return false;
-        Sleep(1000);
+        MilliSleep(1000);
     }
     return true;
 }
@@ -189,7 +189,7 @@ bool GetIPFromIRC(SOCKET hSocket, string strMyName, CNetAddr& ipRet)
 void ThreadIRCSeed(void* parg)
 {
     // Make this thread recognisable as the IRC seeding thread
-    RenameThread("bitcoin-ircseed");
+    RenameThread("topcoin-ircseed");
 
     try
     {
@@ -260,7 +260,7 @@ void ThreadIRCSeed2(void* parg)
         if (!fNoListen && GetLocal(addrLocal, &addrIPv4) && nNameRetry<3)
             strMyName = EncodeAddress(GetLocalAddress(&addrConnect));
         if (strMyName == "")
-            strMyName = strprintf("x%"PRI64u"", GetRand(1000000000));
+            strMyName = strprintf("x%" PRI64u "", GetRand(1000000000));
 
         Send(hSocket, strprintf("NICK %s\r", strMyName.c_str()).c_str());
         Send(hSocket, strprintf("USER %s 8 * : %s\r", strMyName.c_str(), strMyName.c_str()).c_str());
@@ -284,7 +284,7 @@ void ThreadIRCSeed2(void* parg)
                 return;
         }
         nNameRetry = 0;
-        Sleep(500);
+        MilliSleep(500);
 
         // Get our external IP from the IRC server and re-nick before joining the channel
         CNetAddr addrFromIRC;

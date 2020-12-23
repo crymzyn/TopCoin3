@@ -113,7 +113,7 @@ protected:
     bool fSet;
     bool fCompressedPubKey;
 
-    void SetCompressedPubKey();
+    void SetCompressedPubKey(bool fCompressed = true);
 
 public:
 

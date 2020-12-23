@@ -7,7 +7,8 @@
 #include "net.h"
 #include "util.h"
 #include "main.h"
-#include <boost/version.hpp>
+//#include <boost/version.hpp>
+#include "ui_interface.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 
@@ -20,7 +21,7 @@ using namespace boost;
 
 
 unsigned int nWalletDBUpdated;
-
+extern bool fUseMemoryLog;
 
 
 //
@@ -42,11 +43,7 @@ void CDBEnv::EnvShutdown()
         DbEnv(0).remove(strPath.c_str(), 0);
 }
 
-CDBEnv::CDBEnv() : dbenv(DB_CXX_NO_EXCEPTIONS)
-{
-    fDbEnvInit = false;
-    fMockDb = false;
-}
+CDBEnv::CDBEnv() : fDetachDB(false), fDbEnvInit(false), fMockDb(false), dbenv(DB_CXX_NO_EXCEPTIONS) { }
 
 CDBEnv::~CDBEnv()
 {
@@ -78,17 +75,21 @@ bool CDBEnv::Open(boost::filesystem::path pathEnv_)
     if (GetBoolArg("-privdb", true))
         nEnvFlags |= DB_PRIVATE;
 
-    int nDbCache = GetArg("-dbcache", 25);
+    int nDbCache = GetArgInt("-dbcache", 25);
     dbenv.set_lg_dir(pathLogDir.string().c_str());
     dbenv.set_cachesize(nDbCache / 1024, (nDbCache % 1024)*1048576, 1);
     dbenv.set_lg_bsize(1048576);
     dbenv.set_lg_max(10485760);
-    dbenv.set_lk_max_locks(10000);
+    // Bugfix: Bump lk_max_locks default to 537000, to safely handle reorgs with up to 5 blocks reversed
+    // dbenv.set_lk_max_locks(10000);
+    dbenv.set_lk_max_locks(537000);
     dbenv.set_lk_max_objects(10000);
     dbenv.set_errfile(fopen(pathErrorFile.string().c_str(), "a")); /// debug
     dbenv.set_flags(DB_AUTO_COMMIT, 1);
     dbenv.set_flags(DB_TXN_WRITE_NOSYNC, 1);
-//    dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
+#ifdef DB_LOG_AUTO_REMOVE
+    dbenv.log_set_config(DB_LOG_AUTO_REMOVE, 1);
+#endif
     int ret = dbenv.open(strPath.c_str(),
                      DB_CREATE     |
                      DB_INIT_LOCK  |
@@ -104,6 +105,30 @@ bool CDBEnv::Open(boost::filesystem::path pathEnv_)
 
     fDbEnvInit = true;
     fMockDb = false;
+
+    // Check that the number of locks is sufficient (to prevent chain fork possibility, read http://bitcoin.org/may15 for more info)
+    u_int32_t nMaxLocks;
+    if (!dbenv.get_lk_max_locks(&nMaxLocks))
+    {
+        int nBlocks, nDeepReorg;
+        std::string strMessage;
+
+        nBlocks = nMaxLocks / 48768;
+        nDeepReorg = (nBlocks - 1) / 2;
+
+        printf("Final lk_max_locks is %u, sufficient for (worst case) %d block%s in a single transaction (up to a %d-deep reorganization)\n", nMaxLocks, nBlocks, (nBlocks == 1) ? "" : "s", nDeepReorg);
+        if (nDeepReorg < 3)
+        {
+            if (nBlocks < 1)
+                strMessage = strprintf(_("Warning: DB_CONFIG has set_lk_max_locks %u, which may be too low for a single block. If this limit is reached, TopCoin may stop working."), nMaxLocks);
+            else
+                strMessage = strprintf(_("Warning: DB_CONFIG has set_lk_max_locks %u, which may be too low for a common blockchain reorganization. If this limit is reached, TopCoin may stop working."), nMaxLocks);
+
+            strMiscWarning = strMessage;
+            printf("*** %s\n", strMessage.c_str());
+        }
+    }
+
     return true;
 }
 
@@ -123,7 +148,9 @@ void CDBEnv::MakeMock()
     dbenv.set_lk_max_locks(10000);
     dbenv.set_lk_max_objects(10000);
     dbenv.set_flags(DB_AUTO_COMMIT, 1);
-//    dbenv.log_set_config(DB_LOG_IN_MEMORY, 1);
+#ifdef DB_LOG_IN_MEMORY
+    dbenv.log_set_config(DB_LOG_IN_MEMORY, fUseMemoryLog ? 1 : 0);
+#endif
     int ret = dbenv.open(NULL,
                      DB_CREATE     |
                      DB_INIT_LOCK  |
@@ -192,7 +219,7 @@ bool CDBEnv::Salvage(std::string strFile, bool fAggressive,
     while (!strDump.eof() && keyHex != "DATA=END")
     {
         getline(strDump, keyHex);
-        if (keyHex != "DATA_END")
+        if (keyHex != "DATA=END")
         {
             getline(strDump, valueHex);
             vResult.push_back(make_pair(ParseHex(keyHex),ParseHex(valueHex)));
@@ -220,7 +247,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
         return;
 
     fReadOnly = (!strchr(pszMode, '+') && !strchr(pszMode, 'w'));
-    bool fCreate = strchr(pszMode, 'c');
+    bool fCreate = strchr(pszMode, 'c') != NULL;
     unsigned int nFlags = DB_THREAD;
     if (fCreate)
         nFlags |= DB_CREATE;
@@ -258,7 +285,7 @@ CDB::CDB(const char *pszFile, const char* pszMode) :
                 delete pdb;
                 pdb = NULL;
                 --bitdb.mapFileUseCount[strFile];
-                strFile = "";
+                strFile.clear();
                 throw runtime_error(strprintf("CDB() : can't open database file %s, error %d", pszFile, ret));
             }
 
@@ -366,7 +393,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                     }
 
                     Dbc* pcursor = db.GetCursor();
-                    if (pcursor)
+                    if (pcursor) {
                         while (fSuccess)
                         {
                             CDataStream ssKey(SER_DISK, CLIENT_VERSION);
@@ -383,9 +410,14 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                                 fSuccess = false;
                                 break;
                             }
-                            if (pszSkip &&
-                                strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), strlen(pszSkip))) == 0)
-                                continue;
+
+                            if (pszSkip != NULL)
+                            {
+                                size_t pszSkipLen = strlen(pszSkip);
+                                if (strncmp(&ssKey[0], pszSkip, std::min(ssKey.size(), pszSkipLen)) == 0)
+                                    continue;
+                            }
+
                             if (strncmp(&ssKey[0], "\x07version", 8) == 0)
                             {
                                 // Update version:
@@ -398,6 +430,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                             if (ret2 > 0)
                                 fSuccess = false;
                         }
+                    }
                     if (fSuccess)
                     {
                         db.Close();
@@ -421,7 +454,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
                 return fSuccess;
             }
         }
-        Sleep(100);
+        MilliSleep(100);
     }
     return false;
 }
@@ -429,7 +462,7 @@ bool CDB::Rewrite(const string& strFile, const char* pszSkip)
 
 void CDBEnv::Flush(bool fShutdown)
 {
-    int64 nStart = GetTimeMillis();
+    int64_t nStart = GetTimeMillis();
     // Flush log data to the actual data file
     //  on all files that are not in use
     printf("Flush(%s)%s\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started");
@@ -460,7 +493,7 @@ void CDBEnv::Flush(bool fShutdown)
             else
                 mi++;
         }
-        printf("DBFlush(%s)%s ended %15"PRI64d"ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
+        printf("DBFlush(%s)%s ended %15" PRI64d "ms\n", fShutdown ? "true" : "false", fDbEnvInit ? "" : " db not started", GetTimeMillis() - nStart);
         if (fShutdown)
         {
             char** listp;
@@ -509,7 +542,7 @@ bool CAddrDB::Write(const CAddrMan& addr)
     try {
         fileout << ssPeers;
     }
-    catch (std::exception &e) {
+    catch (const std::exception&) {
         return error("CAddrman::Write() : I/O error");
     }
     FileCommit(fileout);
@@ -533,6 +566,8 @@ bool CAddrDB::Read(CAddrMan& addr)
     // use file size to size memory buffer
     int fileSize = GetFilesize(filein);
     int dataSize = fileSize - sizeof(uint256);
+    //Don't try to resize to a negative number if file is small
+    if ( dataSize < 0 ) dataSize = 0;
     vector<unsigned char> vchData;
     vchData.resize(dataSize);
     uint256 hashIn;
@@ -542,7 +577,7 @@ bool CAddrDB::Read(CAddrMan& addr)
         filein.read((char *)&vchData[0], dataSize);
         filein >> hashIn;
     }
-    catch (std::exception &e) {
+    catch (const std::exception&) {
         return error("CAddrman::Read() 2 : I/O error or stream data corrupted");
     }
     filein.fclose();
@@ -566,7 +601,7 @@ bool CAddrDB::Read(CAddrMan& addr)
         // de-serialize address data into one CAddrMan object
         ssPeers >> addr;
     }
-    catch (std::exception &e) {
+    catch (const std::exception&) {
         return error("CAddrman::Read() : I/O error or stream data corrupted");
     }
 
