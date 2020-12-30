@@ -7,7 +7,7 @@
 #include "net.h"
 #include "util.h"
 #include "main.h"
-//#include <boost/version.hpp>
+#include <boost/version.hpp>
 #include "ui_interface.h"
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>

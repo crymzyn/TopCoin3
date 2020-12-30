@@ -944,7 +944,7 @@ uint256 static GetOrphanRoot(const CBlock* pblock)
 // Remove a random orphan block (which does not have any dependent orphans).
 void static PruneOrphanBlocks()
 {
-    if (mapOrphanBlocksByPrev.size() <= (size_t)std::max((int64)0, GetArg("-maxorphanblocks", DEFAULT_MAX_ORPHAN_BLOCKS)))
+    if (mapOrphanBlocksByPrev.size() <= (size_t)std::max((int64_t)0, GetArg("-maxorphanblocks", DEFAULT_MAX_ORPHAN_BLOCKS)))
         return;
 
     seed_insecure_rand();
