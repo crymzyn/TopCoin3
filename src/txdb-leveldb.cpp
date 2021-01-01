@@ -46,7 +46,7 @@ void init_blockindex(leveldb::Options& options, bool fRemoveOld = false) {
 		unsigned int nFile = 1;	
 		while (true)	
 		{	
-		    filesystem::path strBlockFile = GetDataDir() / "txleveldb" / strprintf("blk%05u.dat", nFile);	
+		    filesystem::path strBlockFile = GetDataDir() / strprintf("blk%04u.dat", nFile);	
 		    // Break if no such file	
 		    if( !filesystem::exists( strBlockFile ) )	
 		        break;	
