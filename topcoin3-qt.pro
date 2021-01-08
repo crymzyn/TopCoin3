@@ -111,6 +111,9 @@ contains(BITCOIN_NEED_QT_PLUGINS, 1) {
 
 # use: qmake "USE_LEVELDB=1"
 contains(USE_LEVELDB, 1) {
+
+    DEFINES += USE_LEVELDB
+
     INCLUDEPATH += src/leveldb/include src/leveldb/helpers
     LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
     SOURCES += src/txdb-leveldb.cpp

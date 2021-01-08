@@ -1,9 +1,7 @@
-/*
- * Qt4 bitcoin GUI.
- *
- * W.J. van der Laan 2011-2012
- * The Bitcoin Developers 2011-2012
- */
+// Copyright (c) 2011-2013 The Bitcoin developers   
+// Distributed under the MIT/X11 software license, see the accompanying 
+// file COPYING or http://www.opensource.org/licenses/mit-license.php.  
+
 #include "bitcoingui.h"
 #include "transactiontablemodel.h"
 #include "addressbookpage.h"
@@ -56,7 +54,10 @@
 #include <QDesktopServices>
 #include <QTimer>
 #include <QDragEnterEvent>
+#if QT_VERSION < 0x050000
 #include <QUrl>
+#endif
+#include <QMimeData>
 #include <QStyle>
 
 #include <iostream>
@@ -166,7 +167,7 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addPermanentWidget(frameBlocks);
 
     syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
-	// this->setStyleSheet("background-color: #ceffee;");
+    // this->setStyleSheet("background-color: #ceffee;");
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
@@ -317,7 +318,7 @@ void BitcoinGUI::createMenuBar()
     help->addAction(aboutAction);
     help->addAction(aboutQtAction);
 
-	// QString ss("QMenuBar::item { background-color: #ceffee; color: black }"); 
+    // QString ss("QMenuBar::item { background-color: #ceffee; color: black }"); 
     // appMenuBar->setStyleSheet(ss);
 }
 
@@ -422,7 +423,7 @@ void BitcoinGUI::createTrayIcon()
     // Note: On Mac, the dock icon is used to provide the tray's functionality.
     MacDockIconHandler *dockIconHandler = MacDockIconHandler::instance();
     trayIconMenu = dockIconHandler->dockMenu();
-    dockIconHandler->setMainWindow((QMainWindow *)this);
+    dockIconHandler->setMainWindow((QMainWindow*)this);
 #endif
 
     // Configuration of the tray icon (or dock icon) icon menu
@@ -534,7 +535,7 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
         progressBar->setVisible(false);
     }
 
-	tooltip = tr("Current difficulty is %1.").arg(clientModel->GetDifficulty()) + QString("<br>") + tooltip;
+    tooltip = tr("Current difficulty is %1.").arg(clientModel->GetDifficulty()) + QString("<br>") + tooltip;
 
     QDateTime lastBlockDate = clientModel->getLastBlockDate();
     int secs = lastBlockDate.secsTo(QDateTime::currentDateTime());
@@ -874,7 +875,11 @@ void BitcoinGUI::decryptForMinting(bool status)
 
 void BitcoinGUI::backupWallet()
 {
+#if QT_VERSION < 0x050000
     QString saveDir = QDesktopServices::storageLocation(QDesktopServices::DocumentsLocation);
+#else
+    QString saveDir = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+#endif
     QString filename = QFileDialog::getSaveFileName(this, tr("Backup Wallet"), saveDir, tr("Wallet Data (*.dat)"));
     if(!filename.isEmpty()) {
         if(!walletModel->backupWallet(filename)) {
