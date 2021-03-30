@@ -72,7 +72,8 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     aboutQtAction(0),
     trayIcon(0),
     notificator(0),
-    rpcConsole(0)
+    rpcConsole(0),
+    spinnerFrame(0)
 {
     resize(850, 550);
     setWindowTitle(tr("TopCoinV3") + " - " + tr("Wallet"));
@@ -165,9 +166,6 @@ BitcoinGUI::BitcoinGUI(QWidget *parent):
     statusBar()->addWidget(progressBarLabel);
     statusBar()->addWidget(progressBar);
     statusBar()->addPermanentWidget(frameBlocks);
-
-    syncIconMovie = new QMovie(":/movies/update_spinner", "mng", this);
-    // this->setStyleSheet("background-color: #ceffee;");
 
     // Clicking on a transaction on the overview page simply sends you to transaction history page
     connect(overviewPage, SIGNAL(transactionClicked(QModelIndex)), this, SLOT(gotoHistoryPage()));
@@ -574,8 +572,9 @@ void BitcoinGUI::setNumBlocks(int count, int nTotalBlocks)
     else
     {
         tooltip = tr("Catching up...") + QString("<br>") + tooltip;
-        labelBlocksIcon->setMovie(syncIconMovie);
-        syncIconMovie->start();
+        QString qstr_ = QString(":/movies/spinner-%1").arg(spinnerFrame, 3, 10, QChar('0'));
+        labelBlocksIcon->setPixmap(QIcon(qstr_).pixmap(STATUSBAR_ICONSIZE, STATUSBAR_ICONSIZE));
+        spinnerFrame = (spinnerFrame + 1) % SPINNER_FRAMES;
 
         overviewPage->showOutOfSyncWarning(true);
     }

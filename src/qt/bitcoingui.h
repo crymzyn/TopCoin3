@@ -99,6 +99,8 @@ private:
 
     QMovie *syncIconMovie;
 
+    int spinnerFrame;
+
     /** Create the main UI actions. */
     void createActions();
     /** Create the menu bar and sub-menus. */
