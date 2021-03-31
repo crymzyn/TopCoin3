@@ -10,7 +10,7 @@ USE_LEVELDB:=1
 USE_ASM:=1
 
 DEPSDIR?=/c/deps/
-BOOST_SUFFIX?=-mgw81-mt-s-x32-1_66
+BOOST_SUFFIX?=-mgw53-mt-d-x32-1_66
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \
@@ -41,7 +41,7 @@ LIBS= \
 
 DEFS=-DWIN32 -D_WINDOWS -DBOOST_THREAD_USE_LIB -DBOOST_SPIRIT_THREADSAFE -D__NO_SYSTEM_INCLUDES
 DEBUGFLAGS=-g
-CFLAGS=-mthreads -O2 -msse2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
+CFLAGS=-std=c++11 -mthreads -O2 -msse2 -w -Wall -Wextra -Wformat -Wformat-security -Wno-unused-parameter $(DEBUGFLAGS) $(DEFS) $(INCLUDEPATHS)
 FCFLAGS=-O2 -ffree-line-length-none
 #LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware
 LDFLAGS=-Wl,--dynamicbase -Wl,--nxcompat -static

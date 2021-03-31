@@ -2523,7 +2523,7 @@ static filesystem::path BlockFilePath(unsigned int nFile)
         string strBlockFn = strprintf("blk%04u.dat", nFile);
         return GetDataDir() / strBlockFn;
     #else
-        string strBlockFn = strprintf("blk%05u.dat", nFile);
+        string strBlockFn = strprintf("blk%04u.dat", nFile);
         return GetDataDir() / "txleveldb" / strBlockFn;
     #endif
 }

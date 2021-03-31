@@ -1,35 +1,39 @@
 TEMPLATE = app
 TARGET = topcoin3-qt
 VERSION = 3.2.0
+
 INCLUDEPATH += src src/json src/qt
 QT += core gui network
-greaterThan(QT_MAJOR_VERSION, 4):QT+=widgets
-DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN __NO_SYSTEM_INCLUDES
+QT += widgets
+DEFINES += QT_GUI BOOST_THREAD_USE_LIB BOOST_SPIRIT_THREADSAFE 
 CONFIG += no_include_pwd
 CONFIG += thread
 CONFIG += static
+CONFIG += c++11
 
-# for boost 1.37, add -mt to the boost libraries	
-# use: qmake BOOST_LIB_SUFFIX=-mt	
-# for boost thread win32 with _win32 sufix	
-# use: BOOST_THREAD_LIB_SUFFIX=_win32-...	
-# or when linking against a specific BerkelyDB version: BDB_LIB_SUFFIX=-4.8	
-# Dependency library locations can be customized with:	
-#    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,	
-#    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively	
-# winbuild dependencies	
+# for boost 1.37, add -mt to the boost libraries    
+# use: qmake BOOST_LIB_SUFFIX=-mt   
+# for boost thread win32 with _win32 sufix  
+# use: BOOST_THREAD_LIB_SUFFIX=_win32-...   
+# or when linking against a specific BerkelyDB version: BDB_LIB_SUFFIX=-4.8 
+
+# Dependency library locations can be customized with:  
+#    BOOST_INCLUDE_PATH, BOOST_LIB_PATH, BDB_INCLUDE_PATH,  
+#    BDB_LIB_PATH, OPENSSL_INCLUDE_PATH and OPENSSL_LIB_PATH respectively   
+
+# winbuild dependencies 
 win32 {
-    BOOST_LIB_SUFFIX=-mgw53-mt-s-1_58
-    BOOST_INCLUDE_PATH=C:/deps/boost_1_58_0
-    BOOST_LIB_PATH=C:/deps/boost_1_58_0/stage/lib
-    BDB_INCLUDE_PATH=C:/deps/db-4.8.30.NC/build_unix
-    BDB_LIB_PATH=C:/deps/db-4.8.30.NC/build_unix
-    OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.0.2s/include
-    OPENSSL_LIB_PATH=C:/deps/openssl-1.0.2s
-    MINIUPNPC_INCLUDE_PATH=C:/deps/miniupnpc-1.6
-    MINIUPNPC_LIB_PATH=C:/deps/miniupnpc-1.6
-    QRENCODE_INCLUDE_PATH=C:/deps/qrencode-3.4.4
-    QRENCODE_LIB_PATH=C:/deps/qrencode-3.4.4/.libs
+BOOST_LIB_SUFFIX=-mgw53-mt-d-x32-1_66
+BOOST_INCLUDE_PATH=C:/deps/boost_1_66_0
+BOOST_LIB_PATH=C:/deps/boost_1_66_0/stage/lib
+BDB_INCLUDE_PATH=C:/deps/db-4.8.30.NC/build_unix
+BDB_LIB_PATH=C:/deps/db-4.8.30.NC/build_unix
+OPENSSL_INCLUDE_PATH=C:/deps/openssl-1.1.1g/include
+OPENSSL_LIB_PATH=C:/deps/openssl-1.1.1g
+MINIUPNPC_INCLUDE_PATH=C:/deps/miniupnpc-1.6
+MINIUPNPC_LIB_PATH=C:/deps/miniupnpc-1.6
+QRENCODE_INCLUDE_PATH=C:/deps/qrencode-3.4.4
+QRENCODE_LIB_PATH=C:/deps/qrencode-3.4.4/.libs
 }
 
 OBJECTS_DIR = build
@@ -38,12 +42,13 @@ UI_DIR = build
 
 # use: qmake "RELEASE=1"
 contains(RELEASE, 1) {
-    # Mac: compile for maximum compatibility (10.5, 64-bit)	
-    macx:QMAKE_CXXFLAGS += -mmacosx-version-min=10.5 -arch x86_64 -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.5.sdk	
-    !win32:!macx {	
-        # Linux: static link	
-        LIBS += -Wl,-Bstatic	
-    }	
+    # Mac: compile for maximum compatibility (10.5, 64-bit) 
+    macx:QMAKE_CXXFLAGS += -mmacosx-version-min=10.5 -arch x86_64 -isysroot $(xcode-select --print-path)/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.5.sdk    
+
+    !win32:!macx {  
+        # Linux: static link and extra security (see: https://wiki.debian.org/Hardening)
+        LIBS += -Wl,-Bstatic -Wl,-z,relro -Wl,-z,now    
+    }   
 }
 
 !win32 {
@@ -54,8 +59,8 @@ contains(RELEASE, 1) {
     # This can be enabled for Windows, when we switch to MinGW >= 4.4.x.
 }
 # for extra security on Windows: enable ASLR and DEP via GCC linker flags
-#win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static	
-win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat -static	
+#win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat -Wl,--large-address-aware -static   
+win32:QMAKE_LFLAGS *= -Wl,--dynamicbase -Wl,--nxcompat -static  
 win32:QMAKE_LFLAGS += -static-libgcc -static-libstdc++
 
 # use: qmake "USE_QRCODE=1"
@@ -117,9 +122,9 @@ contains(USE_LEVELDB, 1) {
     INCLUDEPATH += src/leveldb/include src/leveldb/helpers
     LIBS += $$PWD/src/leveldb/libleveldb.a $$PWD/src/leveldb/libmemenv.a
     SOURCES += src/txdb-leveldb.cpp
+    HEADERS += src/txdb-leveldb.h
     !win32 {
         # we use QMAKE_CXXFLAGS_RELEASE even without RELEASE=1 because we use RELEASE to indicate linking preferences not -O preferences
-        # comment out if compile under win:
         genleveldb.commands = cd $$PWD/src/leveldb && CC=$$QMAKE_CC CXX=$$QMAKE_CXX $(MAKE) OPT=\"$$QMAKE_CXXFLAGS $$QMAKE_CXXFLAGS_RELEASE\" libleveldb.a libmemenv.a
     } else {
         # make an educated guess about what the ranlib command is called
@@ -176,7 +181,7 @@ HEADERS += src/qt/bitcoingui.h \
     src/qt/transactiontablemodel.h \
     src/qt/addresstablemodel.h \
     src/qt/optionsdialog.h \
-    src/qt/coincontroldialog.h \	
+    src/qt/coincontroldialog.h \    
     src/qt/coincontroltreewidget.h \
     src/qt/sendcoinsdialog.h \
     src/qt/addressbookpage.h \
@@ -376,7 +381,7 @@ OTHER_FILES += \
 # platform specific defaults, if not overridden on command line
 isEmpty(BOOST_LIB_SUFFIX) {
     macx:BOOST_LIB_SUFFIX = -mt
-    win32:BOOST_LIB_SUFFIX = -mgw53-mt-s-1_58
+    win32:BOOST_LIB_SUFFIX = -mgw53-mt-s-x32-1_66
 }
 
 isEmpty(BOOST_THREAD_LIB_SUFFIX) {
@@ -403,7 +408,7 @@ isEmpty(BOOST_INCLUDE_PATH) {
     macx:BOOST_INCLUDE_PATH = /opt/local/include
 }
 
-win32:DEFINES += WIN32 WIN32_LEAN_AND_MEAN
+win32:DEFINES += WIN32
 win32:RC_FILE = src/qt/res/bitcoin-qt.rc
 
 win32:!contains(MINGW_THREAD_BUGFIX, 0) {
@@ -430,7 +435,7 @@ macx:QMAKE_CXXFLAGS_THREAD += -pthread
 # Set libraries and includes at end, to use platform-defined defaults if not overridden
 INCLUDEPATH += $$BOOST_INCLUDE_PATH $$BDB_INCLUDE_PATH $$OPENSSL_INCLUDE_PATH $$QRENCODE_INCLUDE_PATH
 LIBS += $$join(BOOST_LIB_PATH,,-L,) $$join(BDB_LIB_PATH,,-L,) $$join(OPENSSL_LIB_PATH,,-L,) $$join(QRENCODE_LIB_PATH,,-L,)
-LIBS += -lssl -lcrypto -ldb_cxx$$BDB_LIB_SUFFIX
+LIBS += -lssl -lcrypto -lcrypt32 -ldb_cxx$$BDB_LIB_SUFFIX
 # -lgdi32 has to happen after -lcrypto (see  #681)
 win32:LIBS += -lws2_32 -lshlwapi -lmswsock -lole32 -loleaut32 -luuid -lgdi32
 LIBS += -lboost_system$$BOOST_LIB_SUFFIX -lboost_filesystem$$BOOST_LIB_SUFFIX -lboost_program_options$$BOOST_LIB_SUFFIX -lboost_thread$$BOOST_THREAD_LIB_SUFFIX -lboost_chrono$$BOOST_LIB_SUFFIX
