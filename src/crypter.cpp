@@ -8,7 +8,6 @@
 #include <string>
 #include <openssl/opensslv.h>     // For using openssl 1.0 and 1.1 branches.
 #ifdef WIN32
-#include <winsock2.h>
 #include <windows.h>
 #endif
 
