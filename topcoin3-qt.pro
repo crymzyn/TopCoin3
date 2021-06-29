@@ -1,6 +1,6 @@
 TEMPLATE = app
 TARGET = topcoin3-qt
-VERSION = 3.2.0
+VERSION = 3.2.2
 
 INCLUDEPATH += src src/json src/qt
 QT += core gui network
