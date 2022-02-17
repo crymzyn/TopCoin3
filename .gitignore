@@ -9,3 +9,11 @@ Makefile.Debug
 Makefile.Release
 object_script.topcoin3-qt.Debug
 object_script.topcoin3-qt.Release
+build/build.h
+leaks.xml
+.qmake.stash
+topcoin3-qt.pro.user
+topcoin3-qt.pro.user
+topcoin3-qt.pro.user.5c0ebce.4.8-pre1
+topcoin3-qt_plugin_import.cpp
+topcoin3-qt.pro.user

@@ -10,7 +10,7 @@ USE_LEVELDB:=1
 USE_ASM:=1
 
 DEPSDIR?=/c/deps/
-BOOST_SUFFIX?=-mgw53-mt-d-x32-1_66
+BOOST_SUFFIX?=-mgw53-mt-s-x32-1_66
 
 INCLUDEPATHS= \
  -I"$(CURDIR)" \

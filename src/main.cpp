@@ -2328,17 +2328,18 @@ bool ProcessBlock(CNode* pfrom, CBlock* pblock)
         // Accept orphans as long as there is a node to request its parents from
         if (pfrom) {
             PruneOrphanBlocks();
-            CBlock* pblock2 = new CBlock(*pblock);
+
             // ppcoin: check proof-of-stake
-            if (pblock2->IsProofOfStake())
+            if (pblock->IsProofOfStake())
             {
                 // Limited duplicity on stake: prevents block flood attack
                 // Duplicate stake allowed only when there is orphan child block
-                if (setStakeSeenOrphan.count(pblock2->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
-                    return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for orphan block %s", pblock2->GetProofOfStake().first.ToString().c_str(), pblock2->GetProofOfStake().second, hash.ToString().c_str());
+                if (setStakeSeenOrphan.count(pblock->GetProofOfStake()) && !mapOrphanBlocksByPrev.count(hash) && !Checkpoints::WantedByPendingSyncCheckpoint(hash))
+                    return error("ProcessBlock() : duplicate proof-of-stake (%s, %d) for orphan block %s", pblock->GetProofOfStake().first.ToString().c_str(), pblock->GetProofOfStake().second, hash.ToString().c_str());
                 else
-                    setStakeSeenOrphan.insert(pblock2->GetProofOfStake());
+                    setStakeSeenOrphan.insert(pblock->GetProofOfStake());
             }
+            CBlock* pblock2 = new CBlock(*pblock);
             mapOrphanBlocks.insert(make_pair(hash, pblock2));
             mapOrphanBlocksByPrev.insert(make_pair(pblock2->hashPrevBlock, pblock2));
 

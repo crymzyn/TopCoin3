@@ -23,7 +23,7 @@ CONFIG += c++11
 
 # winbuild dependencies 
 win32 {
-BOOST_LIB_SUFFIX=-mgw53-mt-d-x32-1_66
+BOOST_LIB_SUFFIX=-mgw53-mt-s-x32-1_66
 BOOST_INCLUDE_PATH=C:/deps/boost_1_66_0
 BOOST_LIB_PATH=C:/deps/boost_1_66_0/stage/lib
 BDB_INCLUDE_PATH=C:/deps/db-4.8.30.NC/build_unix
