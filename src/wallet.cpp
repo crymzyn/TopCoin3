@@ -913,7 +913,7 @@ void CWallet::ResendWalletTransactions()
 {
     // Do this infrequently and randomly to avoid giving away
     // that these are our transactions.
-    static int64 nNextTime;
+    static int64_t nNextTime = GetRand(GetTime() + 30 * 60);
     if (GetTime() < nNextTime)
         return;
     bool fFirst = (nNextTime == 0);
@@ -922,7 +922,7 @@ void CWallet::ResendWalletTransactions()
         return;
 
     // Only do it if there's been a new block since last time
-    static int64 nLastTime;
+    static int64_t nLastTime = 0;
     if (nTimeBestReceived < nLastTime)
         return;
     nLastTime = GetTime();
